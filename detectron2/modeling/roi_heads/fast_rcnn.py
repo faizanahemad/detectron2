@@ -368,6 +368,7 @@ class FastRCNNOutputLayers(nn.Module):
         smooth_l1_beta=0.0,
         box_reg_loss_type="smooth_l1",
         box_reg_loss_weight=1.0,
+        use_attr=False, num_attrs=-1
     ):
         """
         NOTE: this interface is experimental.
@@ -396,6 +397,12 @@ class FastRCNNOutputLayers(nn.Module):
         box_dim = len(box2box_transform.weights)
         self.bbox_pred = Linear(input_size, num_bbox_reg_classes * box_dim)
 
+        self.use_attr = use_attr
+        if use_attr:
+            self.cls_embedding = nn.Embedding(num_classes + 1, input_size // 8)
+            self.fc_attr = nn.Linear(input_size + input_size // 8, input_size // 4)
+            self.attr_score = nn.Linear(input_size // 4, num_attrs + 1)
+
         nn.init.normal_(self.cls_score.weight, std=0.01)
         nn.init.normal_(self.bbox_pred.weight, std=0.001)
         for l in [self.cls_score, self.bbox_pred]:
@@ -423,6 +430,8 @@ class FastRCNNOutputLayers(nn.Module):
             "test_topk_per_image"   : cfg.TEST.DETECTIONS_PER_IMAGE,
             "box_reg_loss_type"     : cfg.MODEL.ROI_BOX_HEAD.BBOX_REG_LOSS_TYPE,
             "box_reg_loss_weight"   : cfg.MODEL.ROI_BOX_HEAD.BBOX_REG_LOSS_WEIGHT,
+            "use_attr"              : cfg.MODEL.ROI_BOX_HEAD.ATTR,
+            "num_attrs"             : cfg.MODEL.ROI_BOX_HEAD.NUM_ATTRS
             # fmt: on
         }
 
@@ -438,7 +447,16 @@ class FastRCNNOutputLayers(nn.Module):
             x = torch.flatten(x, start_dim=1)
         scores = self.cls_score(x)
         proposal_deltas = self.bbox_pred(x)
-        return scores, proposal_deltas
+        if self.use_attr:
+            _, max_class = scores.max(-1)  # [b, c] --> [b]
+            cls_emb = self.cls_embedding(max_class)  # [b] --> [b, 256]
+            x = torch.cat([x, cls_emb], -1)  # [b, 2048] + [b, 256] --> [b, 2304]
+            x = self.fc_attr(x)
+            x = F.relu(x)
+            attr_scores = self.attr_score(x)
+            return scores, attr_scores, proposal_deltas
+        else:
+            return scores, proposal_deltas
 
     # TODO: move the implementation to this class.
     def losses(self, predictions, proposals):

@@ -74,7 +74,7 @@ class StandardRPNHead(nn.Module):
     """
 
     @configurable
-    def __init__(self, *, in_channels: int, num_anchors: int, box_dim: int = 4):
+    def __init__(self, *, in_channels: int, num_anchors: int, box_dim: int = 4, hid_channels: int = None):
         """
         NOTE: this interface is experimental.
 
@@ -89,12 +89,14 @@ class StandardRPNHead(nn.Module):
                 box_dim=4, while a rotated box has box_dim=5.
         """
         super().__init__()
+        if hid_channels is None:
+            hid_channels = in_channels
         # 3x3 conv for the hidden representation
-        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1, padding=1)
+        self.conv = nn.Conv2d(in_channels, hid_channels, kernel_size=3, stride=1, padding=1)
         # 1x1 conv for predicting objectness logits
-        self.objectness_logits = nn.Conv2d(in_channels, num_anchors, kernel_size=1, stride=1)
+        self.objectness_logits = nn.Conv2d(hid_channels, num_anchors, kernel_size=1, stride=1)
         # 1x1 conv for predicting box2box transform deltas
-        self.anchor_deltas = nn.Conv2d(in_channels, num_anchors * box_dim, kernel_size=1, stride=1)
+        self.anchor_deltas = nn.Conv2d(hid_channels, num_anchors * box_dim, kernel_size=1, stride=1)
 
         for l in [self.conv, self.objectness_logits, self.anchor_deltas]:
             nn.init.normal_(l.weight, std=0.01)
@@ -115,7 +117,11 @@ class StandardRPNHead(nn.Module):
         assert (
             len(set(num_anchors)) == 1
         ), "Each level must have the same number of anchors per spatial position"
-        return {"in_channels": in_channels, "num_anchors": num_anchors[0], "box_dim": box_dim}
+        if cfg.MODEL.PROPOSAL_GENERATOR.HID_CHANNELS == -1:
+            hid_channels = in_channels
+        else:
+            hid_channels = cfg.MODEL.PROPOSAL_GENERATOR.HID_CHANNELS
+        return {"in_channels": in_channels, "num_anchors": num_anchors[0], "box_dim": box_dim, "hid_channels": hid_channels}
 
     def forward(self, features: List[torch.Tensor]):
         """
