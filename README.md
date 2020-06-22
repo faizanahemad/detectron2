@@ -1,5 +1,7 @@
 <img src=".github/Detectron2-Logo-Horz.svg" width="300" >
 
+Merging Changes from [airsplay/py-bottom-up-attention](https://github.com/airsplay/py-bottom-up-attention) into Current Master (0de7e8c6a2a0078d3c0b6121a5edc2ce4b8451c3 or 0de7e8c dated 21st June 2020) of Detectron2. This was done since airsplay/py-bottom-up-attention was running an old version of Detectron2 and required ROCM.
+
 Detectron2 is Facebook AI Research's next generation software system
 that implements state-of-the-art object detection algorithms.
 It is a ground-up rewrite of the previous version,
@@ -28,6 +30,10 @@ See [INSTALL.md](INSTALL.md).
 
 See [GETTING_STARTED.md](GETTING_STARTED.md),
 or the [Colab Notebook](https://colab.research.google.com/drive/16jcaJoc6bCFAQ96jDe2HwtXj7BMD_-m5).
+
+See [demo/demo_caffe_frcnn_feature_extraction_attr.py](demo/demo_caffe_frcnn_feature_extraction_attr.py) 
+or [demo/demo_caffe_frcnn_feature_extraction_attr.ipynb](demo/demo_caffe_frcnn_feature_extraction_attr.ipynb)
+for feature extraction for [LXMERT](https://github.com/airsplay/lxmert)
 
 Learn more at our [documentation](https://detectron2.readthedocs.org).
 And see [projects/](projects/) for some projects that are built on top of detectron2.
