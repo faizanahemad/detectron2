@@ -327,6 +327,9 @@ class Res5ROIHeads(ROIHeads):
         pooler_scales     = (1.0 / self.feature_strides[self.in_features[0]], )
         sampling_ratio    = cfg.MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO
         self.mask_on      = cfg.MODEL.MASK_ON
+        res5_halve = cfg.MODEL.ROI_BOX_HEAD.RES5HALVE
+        use_attr = cfg.MODEL.ROI_BOX_HEAD.ATTR
+        num_attrs = cfg.MODEL.ROI_BOX_HEAD.NUM_ATTRS
         # fmt: on
         assert not cfg.MODEL.KEYPOINT_ON
 
@@ -338,8 +341,15 @@ class Res5ROIHeads(ROIHeads):
         )
 
         self.res5, out_channels = self._build_res5_block(cfg)
+        if not res5_halve:
+            self.res5[0].conv1.stride = (1, 1)
+            self.res5[0].shortcut.stride = (1, 1)
+            for i in range(3):
+                self.res5[i].conv2.padding = (2, 2)
+                self.res5[i].conv2.dilation = (2, 2)
         self.box_predictor = FastRCNNOutputLayers(
-            out_channels, self.num_classes, self.cls_agnostic_bbox_reg
+            out_channels, self.num_classes, self.cls_agnostic_bbox_reg,
+            use_attr=use_attr, num_attrs=num_attrs
         )
 
         if self.mask_on:

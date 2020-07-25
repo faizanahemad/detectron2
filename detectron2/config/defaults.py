@@ -25,6 +25,7 @@ _C.MODEL.MASK_ON = False
 _C.MODEL.KEYPOINT_ON = False
 _C.MODEL.DEVICE = "cuda"
 _C.MODEL.META_ARCHITECTURE = "GeneralizedRCNN"
+_C.MODEL.CAFFE_MAXPOOL = False
 
 # Path (possibly with schema like catalog:// or detectron2://) to a checkpoint file
 # to be loaded to the model. You can find available models in the model zoo.
@@ -150,6 +151,7 @@ _C.MODEL.FPN.FUSE_TYPE = "sum"
 _C.MODEL.PROPOSAL_GENERATOR = CN()
 # Current proposal generators include "RPN", "RRPN" and "PrecomputedProposals"
 _C.MODEL.PROPOSAL_GENERATOR.NAME = "RPN"
+_C.MODEL.PROPOSAL_GENERATOR.HID_CHANNELS = -1
 # Proposal height and width both need to be greater than MIN_SIZE
 # (a the scale used during training or inference)
 _C.MODEL.PROPOSAL_GENERATOR.MIN_SIZE = 0
@@ -286,6 +288,9 @@ _C.MODEL.ROI_BOX_HEAD.POOLER_RESOLUTION = 14
 _C.MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO = 0
 # Type of pooling operation applied to the incoming feature map for each RoI
 _C.MODEL.ROI_BOX_HEAD.POOLER_TYPE = "ROIAlignV2"
+_C.MODEL.ROI_BOX_HEAD.RES5HALVE = True
+_C.MODEL.ROI_BOX_HEAD.ATTR = False
+_C.MODEL.ROI_BOX_HEAD.NUM_ATTRS = -1
 
 _C.MODEL.ROI_BOX_HEAD.NUM_FC = 0
 # Hidden layer dimension for FC layers in the RoI box head
@@ -560,6 +565,7 @@ _C.SEED = -1
 # for about 10k iterations. It usually hurts total time, but can benefit for certain models.
 # If input images have the same or similar sizes, benchmark is often helpful.
 _C.CUDNN_BENCHMARK = False
+_C.VIS_PERIOD = 0
 # The period (in terms of steps) for minibatch visualization at train time.
 # Set to 0 to disable.
 _C.VIS_PERIOD = 0

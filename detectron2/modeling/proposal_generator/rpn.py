@@ -54,14 +54,20 @@ class StandardRPNHead(nn.Module):
             len(set(num_cell_anchors)) == 1
         ), "Each level must have the same number of cell anchors"
         num_cell_anchors = num_cell_anchors[0]
+        if cfg.MODEL.PROPOSAL_GENERATOR.HID_CHANNELS == -1:
+            hid_channels = in_channels
+        else:
+            hid_channels = cfg.MODEL.PROPOSAL_GENERATOR.HID_CHANNELS
+            print("Modifications for VG in RPN (modeling/proposal_generator/rpn.py):\n"
+                  "\tUse hidden dim %d instead fo the same dim as Res4 (%d).\n" % (hid_channels, in_channels))
 
         # 3x3 conv for the hidden representation
-        self.conv = nn.Conv2d(in_channels, in_channels, kernel_size=3, stride=1, padding=1)
+        self.conv = nn.Conv2d(in_channels, hid_channels, kernel_size=3, stride=1, padding=1)
         # 1x1 conv for predicting objectness logits
-        self.objectness_logits = nn.Conv2d(in_channels, num_cell_anchors, kernel_size=1, stride=1)
+        self.objectness_logits = nn.Conv2d(hid_channels, num_cell_anchors, kernel_size=1, stride=1)
         # 1x1 conv for predicting box2box transform deltas
         self.anchor_deltas = nn.Conv2d(
-            in_channels, num_cell_anchors * box_dim, kernel_size=1, stride=1
+            hid_channels, num_cell_anchors * box_dim, kernel_size=1, stride=1
         )
 
         for l in [self.conv, self.objectness_logits, self.anchor_deltas]:
